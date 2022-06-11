@@ -116,6 +116,9 @@ title( 'slice() 메서드 이용' );
      *
      *      --> 그리고 array 에서 직접 찾아 계산을 하는게 아니라,
      *          새로운 배열에 담은부분에서 찾아서 계산하는구나
+     *      ----> 그치, 새로운 배열에 얕은복사를 한 후 넣어두면 거기서 찾으면 끝나는 거니깐...
+     *            굳이 실제 데이터에서 찾으려고 안해도 되는거지
+     *      ----> 그러면 전체를 반복하는게 아니라, 해당 배열만 반복하면 되는거고...
      */
 }
 
@@ -123,6 +126,158 @@ title( 'slice() 메서드 이용' );
  *           ===== 한 번에 전체 배열을 조작하기 =====
  *
  *      - 하위 배열을 맨들었기 때문에 일부 배열이 아닌 배열 전체를 반복할 수 있다
- *
- *      - p334
+ *      --> 그전에는 배열 전체를 반복하다가, 해당 부분 이후는 버려지지만,
+ *          이러면 가독성이 매우 좋지 않으니 차라리 얕은 복사를 해서 배열전체를
+ *          도는 것이 가독성 측면에서 매우 효율적이라는 이야기.
  */
+
+title( 'average() 함수 이용' );
+
+title( '전역 기본 함수' );
+function reduce( array , init, f ){
+    var accum = init;
+    array.forEach( item => {
+        accum = f( accum , item );
+    } );
+    return accum;
+}
+
+function average( numbers ){
+    return reduce( numbers , 0 , plus ) /  numbers.length;
+}
+
+function plus( a , b ){
+    return a + b;
+}
+
+function map( array , f ){
+    return reduce( array , [] , function( newArr , item  ){
+        newArr.push( f( item ) );
+        return newArr;
+    } );
+}
+{
+
+    try {
+        var answer = [];
+        var window2 = 5;
+
+        // 본문에서 배열에 있는 항목을 사용하지 않고 인덱스만 사용한다
+        for ( var i = 0; i < array.length; i++ ){
+            var subarray = array.slice( i , i + window2 ); // 안쪽 반복문 전체를 .slice()
+            answer.push( average( subarray ) );            // 와 average() 를 호출하는
+                                                           // 코드로 바꾸었다
+        }
+
+        // 그치 다 더하고, 반복문마다 초기화하고, 마지막에 나누니깐 average 가능하기
+
+    }
+    catch( e ){
+        console.log( '기존의 더러운 코드 연습용입니다' );
+    }
+
+    /**
+     *      - 와, 이렇게 리팩터링 하려면 기존에 하던 함수가 대충 어떻게 동작하는지 대충
+     *        이해하고 있어야겠는데...? 함수를 보는 눈을 길러야겠네
+     *      --> 눈이 안뜨이면 진짜 안보임...
+     */
+}
+
+/**
+ *           ===== 작은 단계로 나누기 =====
+ *
+ *      - 위의 코드를 리팩터링 하다보니, 배열 항목 전체를 반복하면서,
+ *        같은 크기의 새로운 배열( subarray )을 맨들고 있다
+ *
+ *      --> 위의 코드의 문제점은 배열의 각 항목이 아니라, 인덱스( i )를
+ *          가지고 반복해야 한다는 문제가 있다.
+ *      --> 따라서, 인덱스를 가지고 원래 배열의 하위 배열, 또는 windows 배열을 맨든다
+ *          ( 아. 즉, 인덱스만 가지고 있는 배열을 맨드는거네... )
+ *
+ *      --> 더 작은 단계로 나누어야 한다
+ */
+title( '더 작은 단계로 나누기' );
+{
+    try {
+        var indices = [];
+
+        for ( var i = 0; i < array.length; i++ ) { // 인덱스만을 가지고 있는 배열을 맨드네
+            indices.push( i );
+        }
+        // 한번 더 반복하더라도 이해하기 쉬운 코드가 더 좋쿠나!!
+
+        var window2 = 5;
+
+        // 인덱스 배열에 map()을 사용한다
+        var answer = map( indices , function( i ){
+            var subarray = array.slice( i , i + window2 );
+            return average( subarray );  // 하위 배열을 맨드는 일 + 평균을 계산하는 일
+                                         // 두 가지를 하고 있다
+        } );
+
+    }
+    catch( e ){
+        console.log( '코드 연습용입니다' );
+    }
+    /**
+     *  - 그치, 보고나니깐, 저수준의 반복문은 사용할 필요가 없네
+     *  --> 무적권 함수형 반복을 사용하는게 맞네...
+     *
+     *  --> 그럼 어떤일들을 하고있는지 명시적으로 보이니깐...
+     *
+     *  - 현재는 map() 콜백 안에서 두 가지 일을 하고있다.
+     *
+     *  1. 하위 배열 맨들기
+     *
+     *  2. 평균을 계산하기
+     *
+     *  - 이코드들은 두 단계로 나누면 더 명확해 질 것이다
+     */
+
+}
+title( '더 작은 단계로 나누기2' );
+{
+
+
+    try {
+        // 재사용 가능한 추가 도구
+        function range( start , end ){
+            var ret = [];
+            for ( var i = start; i < end; i++ ){
+                ret.push( i );
+            }
+            return ret;
+        }
+        var window2 = 5;
+
+        // 몇번 더 반복하더라도 이해하기 쉬운 코드가 더 좋쿠나!!
+        var indices = range( 0 , array.length );
+
+        var windows2 = map( indices , function( i ){    // 하위 배열맨들기
+           return array.slice( i , i + window2 );
+        } );
+
+        var answer = map( windows2 , average ); // 평균 계산하기
+
+        // 이렇게 반복문이 중첩되더라도 알아보기 쉬운게 더 좋아보이네...
+
+    }
+    catch( e ){
+        console.log( '코드 연습용입니다' );
+    }
+
+    /**
+     *      - 모든 반복문을 함수형 도구들로 체이닝했다
+     *        ( 훨씬 알아보기 간결하네... )
+     *
+     *      - 코드에 있는 각 단계는 알고리즘을 설명하는 것과 비슷하다
+     *
+     *      - 생각해 볼 것
+     *
+     *      1. 재사용하기 쉬운가
+     *
+     *      2. 테스트하기 쉬운가
+     *
+     *      3. 유지보수하기 쉬운가
+     */
+}
