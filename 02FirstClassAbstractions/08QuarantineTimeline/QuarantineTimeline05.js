@@ -12,7 +12,7 @@ title( '함수 본문을 콜백으로 바꾸기' );
     try {
         function add_item_to_cart( name , price , quantity ){
             cart = add_item( cart , name , price , quantity );
-            calc_cart_total( cart , update_total_dom );
+            calc_cart_total( cart ,   );
         }
 
         function calc_cart_total( cart , callback ){
